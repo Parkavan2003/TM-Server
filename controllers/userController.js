@@ -44,9 +44,10 @@ const registerUser = asyncHandler(async (req, res) => {
   const userExists = await User.findOne({ email });
 
   if (userExists) {
-    return res
-      .status(400)
-      .json({ status: false, message: "Email address already exists" });
+    return res.status(400).json({
+      status: false,
+      message: "Email address already exists",
+    });
   }
 
   const user = await User.create({
@@ -59,17 +60,27 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
-    isAdmin ? createJWT(res, user._id) : null;
+    // Create token only if admin registers new user
+    if (isAdmin) {
+      createJWT(res, user._id);
+    }
 
+    // Remove password before sending response
     user.password = undefined;
 
-    res.status(201).json(user);
+    return res.status(201).json({
+      status: true,
+      message: "New User created",
+      user,
+    });
   } else {
-    return res
-      .status(400)
-      .json({ status: false, message: "Invalid user data" });
+    return res.status(400).json({
+      status: false,
+      message: "Invalid user data",
+    });
   }
 });
+
 
 // POST -  Logout user / clear cookie
 const logoutUser = (req, res) => {
